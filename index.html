@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Controle de Estoque</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      .container {
+        max-width: 400px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      button.entrada {
+        background-color: #4caf50; /* Verde */
+        color: #fff;
+      }
+
+      button.saida {
+        background-color: #ff5733; /* Vermelho */
+        color: #fff;
+      }
+
+      #estoque {
+        margin-top: 20px;
+      }
+
+      #resultado {
+        margin-top: 20px;
+      }
+
+      #pesquisaEstoque {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Controle de Estoque</h2>
+      <label for="produto">Produto:</label>
+      <input type="text" id="produto" placeholder="Nome do produto" />
+
+      <label for="quantidade">Quantidade:</label>
+      <input type="number" id="quantidade" placeholder="Quantidade" />
+
+      <button class="entrada" onclick="registrarEntrada()">
+        Registrar Entrada
+      </button>
+      <button class="saida" onclick="registrarSaida()">Registrar Saída</button>
+
+      <div id="estoque">
+        <h3>Estoque Atual</h3>
+        <div id="pesquisaEstoque">
+          <label for="produtoSelecionado">Selecione o Produto:</label>
+          <input
+            type="text"
+            id="produtoSelecionado"
+            placeholder="Nome do produto" />
+          <button onclick="consultarEstoque()">Consultar Estoque</button>
+        </div>
+        <div id="resultado"></div>
+      </div>
+    </div>
+
+    <script>
+      async function registrarEntrada() {
+        const produto = document.getElementById("produto").value;
+        const quantidade = parseInt(
+          document.getElementById("quantidade").value
+        );
+
+        const response = await fetch("/entrada", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ produto, quantidade }),
+        });
+
+        const data = await response.json();
+        alert(data.message);
+      }
+
+      async function registrarSaida() {
+        const produto = document.getElementById("produto").value;
+        const quantidade = parseInt(
+          document.getElementById("quantidade").value
+        );
+
+        const response = await fetch("/saida", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ produto, quantidade }),
+        });
+
+        const data = await response.json();
+        alert(data.message);
+      }
+
+      async function consultarEstoque() {
+        const produto = document.getElementById("produtoSelecionado").value;
+
+        const response = await fetch(`/estoque/${produto}`);
+        const data = await response.json();
+
+        if (response.status === 200) {
+          let resultadoHtml = `<p>Produto: ${data.produto}</p><p>Quantidade: ${data.quantidade}</p>`;
+
+          if (data.registros && data.registros.length > 0) {
+            resultadoHtml += "<h4>Registros:</h4><ul>";
+            data.registros.forEach((registro) => {
+              resultadoHtml += `<li>${registro.tipo} - Quantidade: ${
+                registro.quantidade
+              } - Data/Hora: ${new Date(
+                registro.dataHora
+              ).toLocaleString()}</li>`;
+            });
+            resultadoHtml += "</ul>";
+          }
+
+          document.getElementById("resultado").innerHTML = resultadoHtml;
+        } else {
+          document.getElementById(
+            "resultado"
+          ).innerHTML = `<p>Produto não encontrado.</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>
